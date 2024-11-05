@@ -4,46 +4,70 @@ import { TodoList } from 'components';
 import TodoListInput from 'components/todolist/todoinput';
 
 export interface Todo {
-  id: number;
   content: string;
   completed: boolean;
+  isEdited: boolean;
 }
 
 export default function TodoListPage() {
-  const [todos, setTodos] = useState<Todo[]>(todo);
+  const [todoList, setTodoList] = useState<Todo[]>(todo);
+  const [editInput, setEditInput] = useState<string>('');
   const [todoContent, setTodoContent] = useState<string>('');
 
   function handleAddTodo() {
     const newTodos: Todo = {
-      id: todos.length + 1,
       content: todoContent,
       completed: false,
+      isEdited: false,
     };
-    setTodos([...todos, newTodos]);
+    setTodoList([...todoList, newTodos]);
     setTodoContent('');
   }
 
   function handleDeleteTodo(index: number) {
-    const updateTodo = todos.filter((todo, i) => i !== index);
-    setTodos(updateTodo);
+    const updateTodo = todoList.filter((todo, i) => i !== index);
+    setTodoList(updateTodo);
   }
 
   const handleCompleteTodo = (index: number) => {
-    const updatedTodos = todos.map((todo, i) =>
-      i === index ? { ...todo, completed: !todo.completed } : todo,
-    );
-    setTodos(updatedTodos);
+    setTodoList((prevList) => {
+      const updateTodoList = [...prevList];
+      updateTodoList[index].completed = !updateTodoList[index].completed;
+      return updateTodoList;
+    });
+  };
+
+  const handleEditTodo = (index: number) => {
+    setTodoList((prevList) => {
+      const updatedTodoList = [...prevList];
+      if (updatedTodoList[index].isEdited) {
+        updatedTodoList[index].content = editInput;
+      } else {
+        setEditInput(updatedTodoList[index].content);
+      }
+      updatedTodoList[index].isEdited = !updatedTodoList[index].isEdited;
+      return updatedTodoList;
+    });
   };
 
   return (
     <>
       <main>todolist</main>
-      <TodoList todos={todos} DeleteTodo={handleDeleteTodo} CompletedTodo={handleCompleteTodo} />
+      <TodoList
+        todos={todoList}
+        DeleteTodo={handleDeleteTodo}
+        EditTodo={handleEditTodo}
+        setEditInput={setEditInput}
+        CompletedTodo={handleCompleteTodo}
+      />
       <TodoListInput
         todoContent={todoContent}
         setTodoContent={setTodoContent}
         handleAddTodo={handleAddTodo}
       />
+      {todoList.map((todo) => {
+        return <div>{todo.content}</div>;
+      })}
     </>
   );
 }
