@@ -7,7 +7,11 @@ interface todoListButtonProps {
 
 const Button = styled.button<{ content: string }>`
   background-color: ${(props) =>
-    props.content === '완료' ? 'green' : props.content === '삭제' ? 'red' : 'grey'};
+    props.content === '완료'
+      ? 'green'
+      : props.content === '삭제'
+        ? 'red'
+        : 'grey'};
   color: white;
   border: none;
   border-radius: 5px;
@@ -15,7 +19,10 @@ const Button = styled.button<{ content: string }>`
   cursor: pointer;
 `;
 
-export default function TodoListButton({ content, onClick }: todoListButtonProps) {
+export default function TodoListButton({
+  content,
+  onClick,
+}: todoListButtonProps) {
   return (
     <Button content={content} onClick={onClick}>
       {content}
