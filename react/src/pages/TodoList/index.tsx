@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { todo } from './data';
 import { TodoList } from 'components';
-import TodoListInput from 'components/todolist/todoinput';
+import TodoListInput from 'components/todolist';
 
 export interface Todo {
   content: string;
