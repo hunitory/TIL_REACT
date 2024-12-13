@@ -1,5 +1,5 @@
 // TodoList.tsx
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import styled from "styled-components";
 
 interface Todo {
@@ -10,6 +10,9 @@ interface Todo {
 export default function TodoApp() {
   const [todos, setTodos] = useState<Todo[]>(storeTodo);
   const [todoTitle, setTodotitle] = useState<string>("");
+
+  const dragItem = useRef<Todo>();
+  const dragOverItem = useRef<Todo>();
 
   function handleAddTodo() {
     if (todoTitle.trim().length > 0) {
@@ -40,6 +43,20 @@ export default function TodoApp() {
     return todos ? JSON.parse(todos) : [];
   }
 
+  function dragStart(todo: Todo) {
+    dragItem.current = todo
+    console.log("item", dragItem.current);
+  }
+
+  function dragEnter(todo: Todo) {
+    dragOverItem.current = todo;
+    console.log("over", dragOverItem.current);
+  }
+
+  function drop(e: React.DragEvent) {
+    e.preventDefault();
+  }
+
   useEffect(() => {
     localStorage.setItem("todos", JSON.stringify(todos));
   }, [todos]);
@@ -68,17 +85,30 @@ export default function TodoApp() {
         {todos.length > 0 ? (
           todos.map((todo, index) => {
             return (
-              <TodoItem key={index}>
+              <TodoItem
+                key={index}
+                draggable
+                onDragStart={() => {
+                  dragStart(todo);
+                }}
+                onDragEnter={() => {
+                  dragEnter(todo);
+                }}
+                onDragEnd={() => {}}
+                onDragOver={(e) => e.preventDefault()}
+              >
                 <Checkbox
                   type="checkbox"
-                  checked={todo.isCompleted}
-                  onClick={() => {
+                  defaultChecked={todo.isCompleted}
+                  onChange={() => {
                     handleCompletedTodo(index);
                   }}
                 />
-                <TodoText completed={todo.isCompleted}>{todo.title}</TodoText>
+                <TodoText $completed={todo.isCompleted ? "true" : "false"}>
+                  {todo.title}
+                </TodoText>
                 <Button
-                  variant="delete"
+                  $variant="delete"
                   onClick={() => {
                     handleDeleteTodo(index);
                   }}
@@ -92,6 +122,7 @@ export default function TodoApp() {
           <div>할일을 만들어 주세요!</div>
         )}
       </TodoList>
+      <pre>{JSON.stringify(todos, null, 2)}</pre>
     </Container>
   );
 }
@@ -127,19 +158,19 @@ const Input = styled.input`
   }
 `;
 
-const Button = styled.button<{ variant?: "delete" }>`
+const Button = styled.button<{ $variant?: string }>`
   padding: 10px 20px;
   border: none;
   border-radius: 4px;
   background-color: ${(props) =>
-    props.variant === "delete" ? "#ff4444" : "#0066ff"};
+    props.$variant === "delete" ? "#ff4444" : "#0066ff"};
   color: white;
   cursor: pointer;
   font-size: 14px;
 
   &:hover {
     background-color: ${(props) =>
-      props.variant === "delete" ? "#cc0000" : "#0052cc"};
+      props.$variant === "delete" ? "#cc0000" : "#0052cc"};
   }
 `;
 
@@ -163,10 +194,10 @@ const TodoItem = styled.li`
   }
 `;
 
-const TodoText = styled.span<{ completed: boolean }>`
+const TodoText = styled.span<{ $completed: string }>`
   flex: 1;
-  text-decoration: ${(props) => (props.completed ? "line-through" : "none")};
-  color: ${(props) => (props.completed ? "#888" : "#333")};
+  text-decoration: ${(props) => (props.$completed ? "line-through" : "none")};
+  color: ${(props) => (props.$completed ? "#888" : "#333")};
 `;
 
 const Checkbox = styled.input`
