@@ -1,9 +1,10 @@
 // TodoList.tsx
 import React, { useEffect, useState, useRef } from "react";
-import styled from "styled-components";
+import * as S from "./TodoList_Style";
 
 interface Todo {
   title: string;
+  filter: "All" | "Done" | "Undo";
   isCompleted: boolean;
 }
 
@@ -11,13 +12,14 @@ export default function TodoApp() {
   const [todos, setTodos] = useState<Todo[]>(storeTodo);
   const [todoTitle, setTodotitle] = useState<string>("");
 
-  const dragItem = useRef<Todo>();
-  const dragOverItem = useRef<Todo>();
+  const dragItem = useRef<number>();
+  const dragOverItem = useRef<number>();
 
   function handleAddTodo() {
     if (todoTitle.trim().length > 0) {
       const newTodo: Todo = {
         title: todoTitle,
+        filter: "Undo",
         isCompleted: false,
       };
       setTodos([...todos, newTodo]);
@@ -43,14 +45,14 @@ export default function TodoApp() {
     return todos ? JSON.parse(todos) : [];
   }
 
-  function dragStart(todo: Todo) {
-    dragItem.current = todo
-    console.log("item", dragItem.current);
+  function dragStart(e : React.DragEvent, index: number) {
+    dragItem.current = index;
+    console.log(e)
   }
 
-  function dragEnter(todo: Todo) {
-    dragOverItem.current = todo;
-    console.log("over", dragOverItem.current);
+  function dragEnter(e: React.DragEvent, index: number) {
+    dragOverItem.current = index;
+    console.log(e)
   }
 
   function drop(e: React.DragEvent) {
@@ -62,10 +64,10 @@ export default function TodoApp() {
   }, [todos]);
 
   return (
-    <Container>
-      <Title>할 일 관리</Title>
-      <InputContainer>
-        <Input
+    <S.Container>
+      <S.Title>할 일 관리</S.Title>
+      <S.InputContainer>
+        <S.Input
           type="text"
           placeholder="할 일을 입력하세요"
           value={todoTitle}
@@ -78,130 +80,54 @@ export default function TodoApp() {
             }
           }}
         />
-        <Button onClick={handleAddTodo}>추가</Button>
-      </InputContainer>
+        <S.Button onClick={handleAddTodo}>추가</S.Button>
+      </S.InputContainer>
 
-      <TodoList>
+      <S.TodoList>
         {todos.length > 0 ? (
           todos.map((todo, index) => {
             return (
-              <TodoItem
+              <S.TodoItem
                 key={index}
                 draggable
-                onDragStart={() => {
-                  dragStart(todo);
+                onDragStart={(e) => {
+                  dragStart(e, index);
                 }}
-                onDragEnter={() => {
-                  dragEnter(todo);
+                onDragEnter={(e) => {
+                  dragEnter(e, index);
                 }}
-                onDragEnd={() => {}}
+                onDragEnd={(e) => {
+                  drop(e);
+                }}
                 onDragOver={(e) => e.preventDefault()}
               >
-                <Checkbox
+                <>{typeof todo.isCompleted}</>
+                <S.Checkbox
                   type="checkbox"
                   defaultChecked={todo.isCompleted}
                   onChange={() => {
                     handleCompletedTodo(index);
                   }}
                 />
-                <TodoText $completed={todo.isCompleted ? "true" : "false"}>
+                <S.TodoText $completed={todo.isCompleted ? true : false}>
                   {todo.title}
-                </TodoText>
-                <Button
+                </S.TodoText>
+                <S.Button
                   $variant="delete"
                   onClick={() => {
                     handleDeleteTodo(index);
                   }}
                 >
                   삭제
-                </Button>
-              </TodoItem>
+                </S.Button>
+              </S.TodoItem>
             );
           })
         ) : (
           <div>할일을 만들어 주세요!</div>
         )}
-      </TodoList>
+      </S.TodoList>
       <pre>{JSON.stringify(todos, null, 2)}</pre>
-    </Container>
+    </S.Container>
   );
 }
-
-const Container = styled.div`
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-`;
-
-const Title = styled.h1`
-  color: #333;
-  text-align: center;
-  margin-bottom: 20px;
-`;
-
-const InputContainer = styled.div`
-  display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
-`;
-
-const Input = styled.input`
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
-
-  &:focus {
-    outline: none;
-    border-color: #0066ff;
-  }
-`;
-
-const Button = styled.button<{ $variant?: string }>`
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  background-color: ${(props) =>
-    props.$variant === "delete" ? "#ff4444" : "#0066ff"};
-  color: white;
-  cursor: pointer;
-  font-size: 14px;
-
-  &:hover {
-    background-color: ${(props) =>
-      props.$variant === "delete" ? "#cc0000" : "#0052cc"};
-  }
-`;
-
-const TodoList = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
-`;
-
-const TodoItem = styled.li`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
-  margin-bottom: 8px;
-
-  &:hover {
-    background-color: #f0f0f0;
-  }
-`;
-
-const TodoText = styled.span<{ $completed: string }>`
-  flex: 1;
-  text-decoration: ${(props) => (props.$completed ? "line-through" : "none")};
-  color: ${(props) => (props.$completed ? "#888" : "#333")};
-`;
-
-const Checkbox = styled.input`
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-`;
