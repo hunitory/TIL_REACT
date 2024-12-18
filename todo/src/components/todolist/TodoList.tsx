@@ -11,10 +11,11 @@ interface Todo {
 export default function TodoApp() {
   const [todos, setTodos] = useState<Todo[]>(storeTodo);
   const [todoTitle, setTodotitle] = useState<string>("");
+  const [filter, setFilter] = useState<string>("All")
 
   const dragItem = useRef<number>();
   const dragOverItem = useRef<number>();
-
+  
   function handleAddTodo() {
     if (todoTitle.trim().length > 0) {
       const newTodo: Todo = {
@@ -40,23 +41,44 @@ export default function TodoApp() {
     setTodos(updateTodos);
   }
 
+  function handlefilterTodo() {
+    
+  }
+
+
+
+
   function storeTodo() {
     const todos = localStorage.getItem("todos");
     return todos ? JSON.parse(todos) : [];
   }
 
-  function dragStart(e : React.DragEvent, index: number) {
+  function dragStart(e: React.DragEvent, index: number) {
     dragItem.current = index;
-    console.log(e)
   }
 
-  function dragEnter(e: React.DragEvent, index: number) {
+  function dragOver(e: React.DragEvent, index: number) {
     dragOverItem.current = index;
-    console.log(e)
   }
 
   function drop(e: React.DragEvent) {
     e.preventDefault();
+
+    // typeScript
+    if (dragItem.current == undefined || dragOverItem.current == undefined)
+      return;
+
+    // 옮기고 싶은 todo
+    const moveTodo = todos[dragItem.current];
+
+    const newTodo = [...todos];
+    newTodo.splice(dragItem.current, 1);
+    newTodo.splice(dragOverItem.current, 0, moveTodo);
+
+    setTodos(newTodo);
+
+    dragItem.current = undefined;
+    dragOverItem.current = undefined;
   }
 
   useEffect(() => {
@@ -93,18 +115,17 @@ export default function TodoApp() {
                 onDragStart={(e) => {
                   dragStart(e, index);
                 }}
-                onDragEnter={(e) => {
-                  dragEnter(e, index);
+                onDragOverCapture={(e) => {
+                  dragOver(e, index);
                 }}
                 onDragEnd={(e) => {
                   drop(e);
                 }}
                 onDragOver={(e) => e.preventDefault()}
               >
-                <>{typeof todo.isCompleted}</>
                 <S.Checkbox
                   type="checkbox"
-                  defaultChecked={todo.isCompleted}
+                  checked={todo.isCompleted}
                   onChange={() => {
                     handleCompletedTodo(index);
                   }}
